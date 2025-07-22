@@ -1,0 +1,60 @@
+.welcomeContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 60px); /* Subtract header height */
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.welcomeTitle {
+  font-size: 3.5rem;
+  margin-bottom: 20px;
+  color: #fdfdffff; /* Light text */
+}
+
+.welcomeMessage,
+.callToAction {
+  font-size: 1.2rem;
+  color: #a0a0b0; /* Lighter text */
+  max-width: 800px;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.callToAction {
+  margin-bottom: 30px;
+}
+
+.signInButton {
+  background-color: #98211fff; /* Primary accent */
+  color: #fdfdffff;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.signInButton:hover {
+  background-color: #7b1a0fff;
+}
+
+.imagePlaceholder {
+  width: 100%;
+  max-width: 900px;
+  height: 300px; /* Adjust as needed */
+  background-color: #1b1b37ff; /* Dark background */
+  margin-top: 40px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #a0a0b0;
+  font-size: 1.5rem;
+  /* Add a subtle gradient or pattern later if desired */
+}

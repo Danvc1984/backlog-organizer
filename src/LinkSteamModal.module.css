@@ -1,0 +1,83 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: #2a2a4a; /* Matches game card background */
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  color: #fdfdffff; /* Light text color */
+  text-align: center;
+}
+
+.closeButton {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #fdfdffff;
+  cursor: pointer;
+}
+
+.modalHeader h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 2rem;
+  color: #fdfdffff;
+}
+
+.modalHeader p {
+  font-size: 1rem;
+  color: #a0a0b0;
+  margin-bottom: 15px;
+}
+
+.instruction {
+  font-size: 0.9rem;
+  color: #f58f00ff; /* Orange for emphasis */
+  margin-bottom: 25px;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #a0a0b0;
+}
+
+.formGroup input[type="text"] {
+  width: calc(100% - 22px); /* Account for padding and border */
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #507c65ff;
+  background-color: #1b1b37ff; /* Darker input background */
+  color: #fdfdffff;
+  font-size: 1rem;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 25px;
+}
