@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './App.css';
 
-function GameCard({ game, onEdit }) {
+function GameCard({ game, onEdit, onRemove }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -49,6 +49,9 @@ function GameCard({ game, onEdit }) {
           <div className="game-card-footer">
             <button className="edit-game-button" onClick={() => onEdit(game)}>
               Edit Game Details
+            </button>
+            <button className="remove-game-button" onClick={() => onRemove(game.id)}>
+              Remove Game
             </button>
           </div>
         </div>

@@ -12,11 +12,7 @@ This project is a web-based strategy game with a marine life theme that recommen
 - Application name changed to Backlog Odyssey.
 - **Wishlist Discount Indicator:** For games in the wishlist that are currently discounted, a clear visual indicator (e.g., an icon, a colored badge, or distinct text styling) is displayed next to the game's title.
 - **Recommendation Modal Overlay Close:** The recommendation modal now closes when the user clicks outside its content area.
+- **Remove Game Option:** Users can now remove games from their wishlist and backlog.
+- **Filtering and Sorting:** Users can now filter games by genre and sort them by name or release date.
+- **Aesthetic Filter/Sort Controls:** The filter and sort controls have been updated with a modern, button-based design for a better user experience.
 
-## Plan for Current Change: Recommendation Modal Overlay Close
-
-1.  **Modify `src/RecommendationModal.jsx`:**
-    *   Add a `handleOverlayClick` function to the component.
-    *   Attach the `handleOverlayClick` function to the `modalOverlay` div's `onClick` event.
-    *   Ensure that the `onClose` function is called only when the click originates directly from the overlay, not from within the modal content.
-2.  **Update `blueprint.md`:** Document the new feature and the changes made.
