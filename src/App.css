@@ -335,18 +335,87 @@
   background-color: #3e3e6a;
 }
 
-
+/* Responsive Design */
 @media (max-width: 768px) {
   .header {
-    padding: 10px 20px;
+    flex-direction: column;
+    height: auto;
+    padding: 20px;
+  }
+
+  .logo-container {
+    margin-bottom: 15px;
   }
 
   .actions-container {
+    flex-direction: column;
+    width: 100%;
     gap: 10px;
+  }
+
+  .actions-container .primary-accent,
+  .actions-container .secondary-accent,
+  .actions-container .tertiary-accent {
+    width: 100%;
+    text-align: center;
+  }
+
+  .user-info {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .tab-button {
+    margin: 5px;
+  }
+
+  .tab-content {
+    padding: 20px;
   }
 
   .add-game-options {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .control-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .button-group {
+    flex-wrap: wrap;
+  }
+
+  .game-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .game-card-image img {
+    width: 80px;
+    margin-bottom: 10px;
+  }
+
+  .game-card-title {
+    margin-left: 0;
+  }
+
+  .game-card-footer {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .edit-game-button,
+  .remove-game-button {
+    width: 100%;
+    text-align: center;
   }
 }

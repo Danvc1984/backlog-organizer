@@ -185,12 +185,61 @@ function App() {
     }
   };
 
-  const handleImportSteam = () => {
+  const handleImportSteam = async () => {
+    if (!currentUser || !currentUser.steamId) {
+      showNotification('error', 'Please link your Steam account first.');
+      return;
+    }
+  
+    const steamApiKey = import.meta.env.VITE_STEAM_API_KEY;
+    
+    if (!steamApiKey) {
+      showNotification('error', 'Steam API key is not configured. Please add it to your environment variables.');
+      return;
+    }
+  
     setIsSteamImportModalOpen(true);
-    setTimeout(() => {
+    console.log(steamApiKey)
+    console.log(currentUser.steamId)
+    try {
+      const response = await fetch(`/api/GetOwnedGames?key=${steamApiKey}&steamid=${currentUser.steamId}&format=json&include_appinfo=1`);
+      if (!response.ok) {
+        throw new Error(`Steam API request failed with status: ${response.status}`);
+      }
+      const data = await response.json();
+  
+      if (data.response && data.response.games) {
+        const games = data.response.games;
+        const batch = writeBatch(db);
+        let gamesCount = 0;
+  
+        games.forEach(game => {
+          const gameData = {
+            name: game.name,
+            platform: 'PC',
+            genre: '', // Steam API doesn't provide genre in GetOwnedGames
+            estimatedPlaytime: (game.playtime_forever / 60).toFixed(2) + ' hours',
+            releaseDate: '', // Steam API doesn't provide release date in GetOwnedGames
+            imageUrl: `https://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`,
+            userId: currentUser.uid,
+            list: 'backlog',
+          };
+          const newDocRef = doc(collection(db, 'backlog'));
+          batch.set(newDocRef, gameData);
+          gamesCount++;
+        });
+  
+        await batch.commit();
+        showNotification('success', `${gamesCount} games imported successfully from Steam!`);
+      } else {
+        showNotification('warning', 'No games found on your Steam account or your profile is private.');
+      }
+    } catch (error) {
+      console.error("Error importing Steam games: ", error);
+      showNotification('error', `Error importing Steam games: ${error.message}`);
+    } finally {
       setIsSteamImportModalOpen(false);
-      showNotification('success', 'Steam Import Complete! Your games have been imported from Steam.');
-    }, 3000);
+    }
   };
 
   const openCSVUploadModal = (listType) => {
@@ -285,6 +334,11 @@ function App() {
   };
 
   const handleLinkSteam = (steamId) => {
+    setCurrentUser(prevUser => ({
+      ...prevUser,
+      steamId: steamId,
+      hasSteamLinked: true,
+    }));
     setIsLinkSteamModalOpen(false);
   };
 

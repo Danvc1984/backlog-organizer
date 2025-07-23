@@ -12,6 +12,11 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/steamapi/, ''),
         secure: false, // Set to true if using HTTPS for the target
       },
+      '/api/GetOwnedGames': {
+        target: 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/GetOwnedGames/, ''),
+      },
     },
   },
 })

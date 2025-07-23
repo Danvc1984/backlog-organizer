@@ -3,7 +3,7 @@ import styles from './LinkSteamModal.module.css';
 import { db } from './firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 
-const STEAM_API_KEY = 'D39DD769F403E39FB352B0509B88541D';
+const STEAM_API_KEY = import.meta.env.VITE_STEAM_API_KEY;
 
 function LinkSteamModal({ onClose, onLinkSteam, currentUser, showNotification }) {
   const [steamInput, setSteamInput] = useState('');
@@ -22,10 +22,14 @@ function LinkSteamModal({ onClose, onLinkSteam, currentUser, showNotification })
       return input;
     }
 
-    // Assume it's a vanity URL
-    const vanityUrlMatch = input.match(/(?:steamcommunity\.com\/(?:id|profiles)\/)?([a-zA-Z0-9_]+)/i);
+    // Assume it's a vanity URL or full profile URL
+    const vanityUrlMatch = input.match(/(?:https?:\/\/steamcommunity\.com\/(?:id|profiles)\/)?([a-zA-Z0-9_]+)/i);
     const vanityUrl = vanityUrlMatch ? vanityUrlMatch[1] : input;
-
+    
+    if (vanityUrl === 'https' || vanityUrl === 'http' ) {
+      throw new Error('Invalid Steam URL or ID provided.');
+    }
+console.log(vanityUrl);
     try {
       // Use the proxy endpoint for Steam API calls
       const response = await fetch(`/steamapi/ISteamUser/ResolveVanityURL/v0001/?key=${STEAM_API_KEY}&vanityurl=${vanityUrl}`);
@@ -50,6 +54,13 @@ function LinkSteamModal({ onClose, onLinkSteam, currentUser, showNotification })
     if (!currentUser || !currentUser.uid) {
       setError('User not authenticated. Please sign in first.');
       showNotification('error', 'User not authenticated.');
+      setLoading(false);
+      return;
+    }
+    
+    if (!STEAM_API_KEY) {
+      setError('Steam API key is not configured. Please contact support.');
+      showNotification('error', 'Steam API key is not configured.');
       setLoading(false);
       return;
     }

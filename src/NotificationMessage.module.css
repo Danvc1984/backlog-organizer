@@ -38,3 +38,11 @@
 .notificationContainer.success {
   background-color: #507c65ff; /* Green from the palette */
 }
+
+.notificationContainer.error {
+  background-color: #c53030; /* A suitable red color */
+}
+
+.notificationContainer.warning {
+  background-color: #dd6b20; /* A suitable orange color */
+}
