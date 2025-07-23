@@ -1,0 +1,55 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // HELPER FUNCTIONS
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    //------------------------------------------------------------
+
+    // USER PROFILE RULES
+    // Users can read and write to their own user document.
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+
+    // --- GAME LIST RULES ---
+
+    // Wishlist Collection
+    match /wishlist/{gameId} {
+      // Allow read, update, delete if the user is signed in and is the owner of the document.
+      allow read, update, delete: if isSignedIn() && isOwner(resource.data.userId);
+      
+      // Allow create if the user is signed in AND the 'userId' in the new document
+      // matches the user's own UID. Also validates that a 'name' field exists.
+      allow create: if isSignedIn() 
+                    && isOwner(request.resource.data.userId)
+                    && "name" in request.resource.data;
+    }
+
+    // Backlog Collection
+    match /backlog/{gameId} {
+      // Rules are identical to the wishlist
+      allow read, update, delete: if isSignedIn() && isOwner(resource.data.userId);
+      allow create: if isSignedIn() 
+                    && isOwner(request.resource.data.userId)
+                    && "name" in request.resource.data;
+    }
+
+    // Recently Picked Collection
+    match /recentlyPicked/{gameId} {
+      // Rules are identical to the wishlist
+      allow read, update, delete: if isSignedIn() && isOwner(resource.data.userId);
+      allow create: if isSignedIn() 
+                    && isOwner(request.resource.data.userId)
+                    && "name" in request.resource.data;
+    }
+  }
+}

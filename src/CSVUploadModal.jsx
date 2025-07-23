@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './CSVUploadModal.module.css';
 
-function CSVUploadModal({ onClose, onUpload }) {
+function CSVUploadModal({ onClose, onUpload, listType }) {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadListType, setUploadListType] = useState('backlog');
+
+  useEffect(() => {
+    if (listType) {
+      setUploadListType(listType);
+    }
+  }, [listType]);
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -10,7 +17,7 @@ function CSVUploadModal({ onClose, onUpload }) {
 
   const handleUploadClick = () => {
     if (selectedFile) {
-      onUpload(selectedFile);
+      onUpload(selectedFile, uploadListType);
       onClose(); // Close this modal and let the loading modal take over
     }
   };
@@ -21,17 +28,45 @@ function CSVUploadModal({ onClose, onUpload }) {
     }
   };
 
+  const handleListTypeChange = (event) => {
+    setUploadListType(event.target.value);
+  };
+
   return (
     <div className={styles.modalOverlay} onClick={handleOverlayClick}>
       <div className={styles.modalContent}>
         <button className={styles.closeButton} onClick={onClose}>×</button>
         <h2>Upload CSV</h2>
         <p className={styles.description}>
-          Select a CSV file to import games into your backlog. This
-          file should have columns for: title, platform,
-          estimatedDuration, gameCoverArt, and
-          releaseDate.
+          Select a CSV file to import games. This
+          file should have columns for: name, platform, genre,
+          estimatedPlaytime, releaseDate, and optionally imageUrl.
         </p>
+        <div className={styles.formGroup}>
+          <label>Import to:</label>
+          <div>
+            <label>
+              <input
+                type="radio"
+                name="listType"
+                value="backlog"
+                checked={uploadListType === 'backlog'}
+                onChange={handleListTypeChange}
+              />
+              Backlog
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="listType"
+                value="wishlist"
+                checked={uploadListType === 'wishlist'}
+                onChange={handleListTypeChange}
+              />
+              Wishlist
+            </label>
+          </div>
+        </div>
         <div className={styles.formGroup}>
           <label htmlFor="csvFile">CSV File:</label>
           <input
@@ -47,16 +82,14 @@ function CSVUploadModal({ onClose, onUpload }) {
           </span>
         </div>
         <div className={styles.modalActions}>
-        <button
+          <button
             className="primary-accent"
             onClick={handleUploadClick}
             disabled={!selectedFile}
           >
-             Upload
-             </button>
+            Upload
+          </button>
           <button className="secondary-accent" onClick={onClose}>Cancel</button>
-          
-           
         </div>
       </div>
     </div>

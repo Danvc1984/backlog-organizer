@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import styles from './AuthModal.module.css';
+import { auth, db } from './firebase'; // Import auth and db
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore'; // Import doc and setDoc
 
-function AuthModal({ onClose, onSignIn }) {
+function AuthModal({ onClose, onSignIn, showNotification }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [error, setError] = useState('');
 
   const handleOverlayClick = (event) => {
     if (event.target === event.currentTarget) {
@@ -13,19 +17,38 @@ function AuthModal({ onClose, onSignIn }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSignUp) {
-      console.log('Sign Up:', { email, password, username });
-      // Mock Firebase signup.
-      // For now, on successful sign-up, we treat it as a sign-in and pass the email.
-      onSignIn({ name: username || email }); // Use username if available, else email
-    } else {
-      console.log('Sign In:', { email, password });
-      // Mock Firebase signin.
-      onSignIn({ name: email });
+    setError(''); // Clear previous errors
+
+    try {
+      if (isSignUp) {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        await updateProfile(user, { displayName: username });
+
+        // Create user document in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+          uid: user.uid,
+          username: username,
+          email: user.email,
+          steamId: null,
+          hasSteamLinked: false,
+        });
+
+        onSignIn({ name: username || email, uid: user.uid });
+        showNotification('success', 'Account created successfully!');
+      } else {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        onSignIn({ name: user.displayName || user.email, uid: user.uid });
+        showNotification('success', 'Signed in successfully!');
+      }
+      onClose();
+    } catch (err) {
+      setError(err.message);
+      showNotification('error', err.message);
     }
-    onClose(); // Close modal after mock submission
   };
 
   return (
@@ -69,6 +92,7 @@ function AuthModal({ onClose, onSignIn }) {
               required
             />
           </div>
+          {error && <p className={styles.errorMessage}>{error}</p>}
           <div className={styles.modalActions}>
             <button type="submit" className={styles.primaryButton}>
               {isSignUp ? 'Sign Up' : 'Sign In'}

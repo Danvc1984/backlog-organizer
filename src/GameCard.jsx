@@ -1,12 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
-function GameCard({ game, onEdit, onRemove }) {
+function GameCard({ game, onEdit, onRemove, closeAllDetails, setCloseAllDetails, onGameCardToggle }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleToggle = () => {
+    const newIsOpen = !isOpen;
+    setIsOpen(newIsOpen);
+    if (onGameCardToggle) {
+      onGameCardToggle(game.id, newIsOpen);
+    }
+  };
+
+  useEffect(() => {
+    if (closeAllDetails) {
+      if (isOpen) {
+        setIsOpen(false);
+        if (onGameCardToggle) {
+          onGameCardToggle(game.id, false);
+        }
+      }
+      setCloseAllDetails(false);
+    }
+  }, [closeAllDetails, setCloseAllDetails, isOpen, onGameCardToggle, game.id]);
 
   return (
     <div className={`game-card ${isOpen ? 'open' : ''}`}>
-      <div className="game-card-header" onClick={() => setIsOpen(!isOpen)}>
+      <div className="game-card-header" onClick={handleToggle}>
         <div className="game-card-image">
           <img src={game.imageUrl} alt={game.name} />
         </div>
