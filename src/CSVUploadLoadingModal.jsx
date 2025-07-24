@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './CSVUploadLoadingModal.module.css';
 
-function CSVUploadLoadingModal({ onClose }) {
+function CSVUploadLoadingModal() {
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>

@@ -10,10 +10,12 @@ import NotificationMessage from './NotificationMessage';
 import AuthModal from './AuthModal';
 import WelcomePage from './WelcomePage';
 import LinkSteamModal from './LinkSteamModal';
-import LoadingScreen from './LoadingScreen'; // Import the new component
-import { auth, db } from './firebase'; // Import auth and db
+import LoadingScreen from './LoadingScreen';
+import SteamImportConfirmationModal from './SteamImportConfirmationModal';
+import { auth, db, app } from './firebase'; // Import 'app' for functions
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import Papa from 'papaparse'; // Import PapaParse
+import { getFunctions, httpsCallable } from 'firebase/functions'; // Import for Cloud Functions
+import Papa from 'papaparse';
 import {
   collection,
   query,
@@ -22,17 +24,23 @@ import {
   doc,
   getDoc,
   setDoc,
-  addDoc,
-  updateDoc,
   deleteDoc,
-  writeBatch
 } from 'firebase/firestore';
 import './App.css';
+
+// Initialize Firebase Functions
+const functions = getFunctions(app);
+const importSteamGamesCallable = httpsCallable(functions, 'importSteamGames');
+const processCSVUploadCallable = httpsCallable(functions, 'processCSVUpload');
+const saveGameCallable = httpsCallable(functions, 'saveGame'); // New callable function
+const moveGameCallable = httpsCallable(functions, 'moveGame'); // New callable function for moving games
+
 
 function App() {
   const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState(false);
   const [isAddEditGameModalOpen, setIsAddEditGameModalOpen] = useState(false);
   const [isSteamImportModalOpen, setIsSteamImportModalOpen] = useState(false);
+  const [isSteamImportConfirmationModalOpen, setIsSteamImportConfirmationModalOpen] = useState(false);
   const [isCSVUploadLoadingModalOpen, setIsCSVUploadLoadingModalOpen] = useState(false);
   const [isCSVUploadFormModalOpen, setIsCSVUploadFormModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -45,9 +53,6 @@ function App() {
   const [backlog, setBacklog] = useState([]);
   const [recentlyPicked, setRecentlyPicked] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterCriterion, setFilterCriterion] = useState('All');
-  const [sortCriterion, setSortCriterion] = useState('name-asc');
-  const [closeAllDetails, setCloseAllDetails] = useState(false); // New state variable
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
@@ -65,7 +70,6 @@ function App() {
             hasSteamLinked: userData.hasSteamLinked || false,
           });
         } else {
-          // Create user doc if it doesn't exist
           const newUser = {
             uid: user.uid,
             username: user.displayName || user.email,
@@ -105,7 +109,7 @@ function App() {
       const unsubscribeBacklog = onSnapshot(qBacklog, (querySnapshot) => {
         const games = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setBacklog(games);
-        setLoading(false); // Set loading to false after backlog is fetched
+        setLoading(false);
       }, (error) => {
         console.error("Backlog listener error:", error);
         setLoading(false);
@@ -152,25 +156,20 @@ function App() {
       showNotification('error', 'You must be logged in to save games.');
       return;
     }
-  
+
     const gameData = { ...game, userId: currentUser.uid };
-  
+
     try {
-      if (gameData.id) {
-        const gameRef = doc(db, gameData.list, gameData.id);
-        await updateDoc(gameRef, gameData);
-        showNotification('success', 'Game updated successfully!');
-      } else {
-        await addDoc(collection(db, gameData.list), gameData);
-        showNotification('success', 'Game added successfully!');
-      }
+      const result = await saveGameCallable({ gameData });
+      showNotification('success', result.data.message);
       setIsAddEditGameModalOpen(false);
     } catch (error) {
       console.error("Error saving game: ", error);
-      showNotification('error', `Error saving game: ${error.message}`);
+      const errorMessage = error.details?.message || error.message || 'An unknown error occurred.';
+      showNotification('error', `Error saving game: ${errorMessage}`);
     }
   };
-  
+
   const handleRemoveGame = async (gameId, list) => {
     if (!currentUser) {
       showNotification('error', 'You must be logged in to remove games.');
@@ -185,58 +184,60 @@ function App() {
     }
   };
 
-  const handleImportSteam = async () => {
+  const handleMoveToBacklog = async (gameId) => {
+    if (!currentUser) {
+        showNotification('error', 'You must be logged in to move games.');
+        return;
+    }
+    try {
+        const result = await moveGameCallable({
+            gameId,
+            sourceList: 'wishlist',
+            destinationList: 'backlog'
+        });
+        showNotification('success', result.data.message);
+    } catch (error) {
+        console.error("Error moving game to backlog: ", error);
+        const errorMessage = error.details?.message || error.message || 'An unknown error occurred.';
+        showNotification('error', `Error moving game: ${errorMessage}`);
+    }
+  };
+
+  const handleMoveToRecentlyPicked = async (gameId) => {
+    if (!currentUser) {
+      showNotification('error', 'You must be logged in to move games.');
+      return;
+    }
+    try {
+      const result = await moveGameCallable({ gameId, sourceList: 'backlog', destinationList: 'recentlyPicked', playedAt: new Date().toISOString() });
+      showNotification('success', result.data.message);
+    } catch (error) {
+      console.error("Error moving game to recently picked: ", error);
+      const errorMessage = error.details?.message || error.message || 'An unknown error occurred.';
+      showNotification('error', `Error moving game: ${errorMessage}`);
+    }
+  };
+
+  const handleImportSteam = () => {
     if (!currentUser || !currentUser.steamId) {
       showNotification('error', 'Please link your Steam account first.');
       return;
     }
-  
-    const steamApiKey = import.meta.env.VITE_STEAM_API_KEY;
-    
-    if (!steamApiKey) {
-      showNotification('error', 'Steam API key is not configured. Please add it to your environment variables.');
-      return;
-    }
-  
+    setIsSteamImportConfirmationModalOpen(true);
+  };
+
+  const confirmImportSteam = async () => {
+    setIsSteamImportConfirmationModalOpen(false);
     setIsSteamImportModalOpen(true);
-    console.log(steamApiKey)
-    console.log(currentUser.steamId)
+
     try {
-      const response = await fetch(`/api/GetOwnedGames?key=${steamApiKey}&steamid=${currentUser.steamId}&format=json&include_appinfo=1`);
-      if (!response.ok) {
-        throw new Error(`Steam API request failed with status: ${response.status}`);
-      }
-      const data = await response.json();
-  
-      if (data.response && data.response.games) {
-        const games = data.response.games;
-        const batch = writeBatch(db);
-        let gamesCount = 0;
-  
-        games.forEach(game => {
-          const gameData = {
-            name: game.name,
-            platform: 'PC',
-            genre: '', // Steam API doesn't provide genre in GetOwnedGames
-            estimatedPlaytime: (game.playtime_forever / 60).toFixed(2) + ' hours',
-            releaseDate: '', // Steam API doesn't provide release date in GetOwnedGames
-            imageUrl: `https://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}/${game.img_icon_url}.jpg`,
-            userId: currentUser.uid,
-            list: 'backlog',
-          };
-          const newDocRef = doc(collection(db, 'backlog'));
-          batch.set(newDocRef, gameData);
-          gamesCount++;
-        });
-  
-        await batch.commit();
-        showNotification('success', `${gamesCount} games imported successfully from Steam!`);
-      } else {
-        showNotification('warning', 'No games found on your Steam account or your profile is private.');
-      }
+      const result = await importSteamGamesCallable({ steamId: currentUser.steamId });
+      showNotification('success', result.data.message);
     } catch (error) {
       console.error("Error importing Steam games: ", error);
-      showNotification('error', `Error importing Steam games: ${error.message}`);
+      // Improved error message extraction
+      const errorMessage = error.details?.message || error.message || 'An unknown error occurred.';
+      showNotification('error', `Error importing Steam games: ${errorMessage}`);
     } finally {
       setIsSteamImportModalOpen(false);
     }
@@ -255,56 +256,33 @@ function App() {
     }
 
     setIsCSVUploadLoadingModalOpen(true);
-    const gamesToAdd = [];
 
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      transformHeader: header => header.trim().replace(/ /g, ''), // Normalize headers
+      transformHeader: header => header.trim().replace(/ /g, ''),
       complete: async (results) => {
         if (results.errors.length) {
-          console.error("CSV Parsing Errors:", results.errors.map(err => err.message).join('; ')); // Log messages
+          console.error("CSV Parsing Errors:", results.errors.map(err => err.message).join('; '));
           showNotification('error', `CSV parsing failed: ${results.errors[0].message}`);
           setIsCSVUploadLoadingModalOpen(false);
           return;
         }
 
-        const batch = writeBatch(db);
-        let gamesCount = 0;
-
-        results.data.forEach(row => {
-          // Map CSV headers to your game object fields
-          const gameData = {
-            name: row.name || '',
-            platform: row.platform || '',
-            genre: row.genre || '',
-            estimatedPlaytime: row.estimatedPlaytime || '',
-            releaseDate: row.releaseDate || '',
-            imageUrl: row.imageUrl || '',
-            userId: currentUser.uid,
-            list: listType,
-          };
-
-          // Only add games with a name
-          if (gameData.name) {
-            const newDocRef = doc(collection(db, listType));
-            batch.set(newDocRef, gameData);
-            gamesCount++;
-          }
-        });
-
-        if (gamesCount === 0) {
+        if (results.data.length === 0) {
           showNotification('warning', 'No valid games found in the CSV to upload.');
           setIsCSVUploadLoadingModalOpen(false);
           return;
         }
 
         try {
-          await batch.commit();
-          showNotification('success', `${gamesCount} games imported successfully into ${listType} from CSV!`);
+          const result = await processCSVUploadCallable({ csvData: results.data, listType });
+          showNotification('success', result.data.message);
         } catch (error) {
-          console.error("Error batch adding documents: ", error);
-          showNotification('error', `Error importing games: ${error.message}`);
+          console.error("Error importing games from CSV: ", error);
+          // Improved error message extraction
+          const errorMessage = error.details?.message || error.message || 'An unknown error occurred.';
+          showNotification('error', `Error importing games from CSV: ${errorMessage}`);
         } finally {
           setIsCSVUploadLoadingModalOpen(false);
         }
@@ -321,7 +299,7 @@ function App() {
     setIsAuthModalOpen(true);
   };
 
-  const handleSignIn = (user) => {};
+  const handleSignIn = () => {};
 
   const handleSignOut = async () => {
     try {
@@ -354,36 +332,10 @@ function App() {
     }
   };
 
-  const getFilteredAndSortedGames = (games) => {
-    if (!games) return [];
-    let filteredGames = games;
-
-    if (filterCriterion !== 'All') {
-      filteredGames = games.filter(game => game.genre === filterCriterion);
-    }
-
-    const sortedGames = [...filteredGames].sort((a, b) => {
-      if (sortCriterion === 'name-asc') {
-        return a.name.localeCompare(b.name);
-      } else if (sortCriterion === 'name-desc') {
-        return b.name.localeCompare(a.name);
-      } else if (sortCriterion === 'release-date-asc') {
-        return new Date(a.releaseDate) - new Date(b.releaseDate);
-      } else if (sortCriterion === 'release-date-desc') {
-        return new Date(b.releaseDate) - new Date(a.releaseDate);
-      }
-      return 0;
-    });
-    return sortedGames;
-  };
-
-  const filteredAndSortedWishlist = getFilteredAndSortedGames(wishlist);
-  const filteredAndSortedBacklog = getFilteredAndSortedGames(backlog);
-
   if (loading) {
     return <LoadingScreen />;
   }
-  
+
   return (
     <div className="background-dark">
       <Header
@@ -400,15 +352,11 @@ function App() {
           onRemoveGame={handleRemoveGame}
           onImportSteam={handleImportSteam}
           onUploadCSV={openCSVUploadModal}
-          wishlist={filteredAndSortedWishlist}
-          backlog={filteredAndSortedBacklog}
+          wishlist={wishlist}
+          backlog={backlog}
           recentlyPicked={recentlyPicked}
-          filterCriterion={filterCriterion}
-          setFilterCriterion={setFilterCriterion}
-          sortCriterion={sortCriterion}
-          setSortCriterion={setSortCriterion}
-          closeAllDetails={closeAllDetails}
-          setCloseAllDetails={setCloseAllDetails}
+          onMoveToBacklog={handleMoveToBacklog} // Pass new handlers
+          onMoveToRecentlyPicked={handleMoveToRecentlyPicked} // Pass new handlers
         />
       ) : (
         <WelcomePage onSignInClick={openAuthModal} />
@@ -421,6 +369,12 @@ function App() {
           onClose={() => setIsAddEditGameModalOpen(false)}
           onSave={handleSaveGame}
           listType={listTypeForNewGame}
+        />
+      )}
+      {isSteamImportConfirmationModalOpen && (
+        <SteamImportConfirmationModal
+          onConfirm={confirmImportSteam}
+          onCancel={() => setIsSteamImportConfirmationModalOpen(false)}
         />
       )}
       {isSteamImportModalOpen && <SteamImportLoadingModal onClose={() => setIsSteamImportModalOpen(false)} />}

@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import styles from './AddEditGameModal.module.css';
+import { app } from './firebase'; // Import 'app'
+import { getFunctions, httpsCallable } from 'firebase/functions'; // Import for Cloud Functions
+
+// Initialize Firebase Functions
+const functions = getFunctions(app);
+const fetchGameDetailsCallable = httpsCallable(functions, 'fetchGameDetails');
 
 function AddEditGameModal({ gameToEdit, onClose, onSave, listType }) {
   const [game, setGame] = useState(gameToEdit || {
@@ -41,23 +47,27 @@ function AddEditGameModal({ gameToEdit, onClose, onSave, listType }) {
     if (!game.name) return;
 
     setIsSearching(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const mockFetchedGame = {
-      name: game.name,
-      imageUrl: 'https://via.placeholder.com/300x400?text=Game+Cover',
-      platform: 'PC, PS5, Xbox Series X/S',
-      genre: 'Action, Adventure',
-      estimatedPlaytime: '40-60 hours',
-      releaseDate: '2023-10-26',
-    };
-
-    setGame(prevGame => ({
-      ...prevGame,
-      ...mockFetchedGame,
-      imageUrl: prevGame.imageUrl || mockFetchedGame.imageUrl,
-    }));
-    setIsSearching(false);
+    try {
+      const result = await fetchGameDetailsCallable({ gameName: game.name });
+      
+      if (result.data.success) {
+        const fetchedGame = result.data.gameDetails;
+        setGame(prevGame => ({
+          ...prevGame,
+          ...fetchedGame,
+        }));
+      } else {
+        console.warn(result.data.message);
+        // Optionally show a notification to the user that no details were found
+      }
+    } catch (error) {
+      console.error("Error fetching game data from RAWG via Cloud Function:", error);
+      // Improved error message extraction
+      const errorMessage = error.details?.message || error.message || 'An unknown error occurred.';
+      alert(`Failed to auto-fill details: ${errorMessage}`); // Using alert for simplicity here, can integrate with notification system
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleSubmit = (e) => {

@@ -1,12 +1,33 @@
-# React + Vite
+# Backlog Organizer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Backlog Organizer is a web application designed to help users manage their game backlog and wishlist, providing personalized game recommendations. Our goal is to provide a user-friendly experience that encourages engagement with their existing game library and helps them discover new titles.
 
-Currently, two official plugins are available:
+## Goals
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Enable users to organize their purchased games (backlog) and desired games (wishlist).
+- Provide intelligent recommendations from the backlog and occasionally from the wishlist.
+- Offer a gamified experience for selecting recommended games.
+- Track historical recommendations.
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **User Authentication:** Sign up, sign in, and sign out with email and password.
+- **Steam Integration:** Link your Steam account to import your game library.
+- **Game Management:**
+    - Manage two separate lists: a backlog for games you own and a wishlist for games you want to buy.
+    - Manually add and edit games.
+    - Import your entire Steam library into your backlog.
+    - Upload a CSV file to add games to your backlog or wishlist.
+    - Remove games from your lists.
+    - Move games from your wishlist to your backlog, and from your backlog to a "recently picked" list.
+- **Game Discovery:**
+    - Get a random game recommendation from your backlog.
+    - Filter your lists by genre, release year, platform, and estimated playtime.
+    - Sort your lists by name and release date.
+
+## Technologies Used
+
+- React
+- Vite
+- Firebase (Authentication, Firestore, Cloud Functions)
+- Papaparse (for CSV parsing)

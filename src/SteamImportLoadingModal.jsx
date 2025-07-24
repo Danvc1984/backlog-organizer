@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './SteamImportLoadingModal.module.css';
 
-function SteamImportLoadingModal({ onClose }) {
+function SteamImportLoadingModal() {
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>

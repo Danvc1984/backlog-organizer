@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import styles from './LinkSteamModal.module.css';
-import { db } from './firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { app } from './firebase'; // Import 'app'
+import { getFunctions, httpsCallable } from 'firebase/functions'; // Import for Cloud Functions
 
-const STEAM_API_KEY = import.meta.env.VITE_STEAM_API_KEY;
+// Initialize Firebase Functions
+const functions = getFunctions(app);
+const resolveSteamIdCallable = httpsCallable(functions, 'resolveSteamId');
 
 function LinkSteamModal({ onClose, onLinkSteam, currentUser, showNotification }) {
   const [steamInput, setSteamInput] = useState('');
@@ -13,36 +15,6 @@ function LinkSteamModal({ onClose, onLinkSteam, currentUser, showNotification })
   const handleOverlayClick = (event) => {
     if (event.target === event.currentTarget) {
       onClose();
-    }
-  };
-
-  const resolveSteamId = async (input) => {
-    // Check if the input is already a 64-bit Steam ID (purely numeric, 17 digits)
-    if (/^7656119[0-9]{10}$/.test(input)) {
-      return input;
-    }
-
-    // Assume it's a vanity URL or full profile URL
-    const vanityUrlMatch = input.match(/(?:https?:\/\/steamcommunity\.com\/(?:id|profiles)\/)?([a-zA-Z0-9_]+)/i);
-    const vanityUrl = vanityUrlMatch ? vanityUrlMatch[1] : input;
-    
-    if (vanityUrl === 'https' || vanityUrl === 'http' ) {
-      throw new Error('Invalid Steam URL or ID provided.');
-    }
-console.log(vanityUrl);
-    try {
-      // Use the proxy endpoint for Steam API calls
-      const response = await fetch(`/steamapi/ISteamUser/ResolveVanityURL/v0001/?key=${STEAM_API_KEY}&vanityurl=${vanityUrl}`);
-      const data = await response.json();
-
-      if (data.response.success === 1) {
-        return data.response.steamid;
-      } else {
-        throw new Error(data.response.message || 'Could not resolve Steam ID from the provided input.');
-      }
-    } catch (err) {
-      console.error("Error resolving Steam ID:", err);
-      throw new Error(`Failed to resolve Steam ID: ${err.message}`);
     }
   };
 
@@ -58,29 +30,18 @@ console.log(vanityUrl);
       return;
     }
     
-    if (!STEAM_API_KEY) {
-      setError('Steam API key is not configured. Please contact support.');
-      showNotification('error', 'Steam API key is not configured.');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const steam64Id = await resolveSteamId(steamInput);
-
-      // Update user document in Firestore
-      const userRef = doc(db, "users", currentUser.uid);
-      await updateDoc(userRef, {
-        steamId: steam64Id,
-        hasSteamLinked: true,
-      });
+      const result = await resolveSteamIdCallable({ steamInput });
+      const steam64Id = result.data.steamId;
 
       onLinkSteam(steam64Id); // Propagate the 64-bit ID to parent
-      showNotification('success', 'Steam account linked successfully!');
+      showNotification('success', result.data.message);
       onClose();
     } catch (err) {
-      setError(err.message);
-      showNotification('error', err.message);
+      console.error("Error linking Steam account: ", err);
+      const errorMessage = err.details?.message || err.message || 'An unknown error occurred.';
+      setError(errorMessage);
+      showNotification('error', errorMessage);
     } finally {
       setLoading(false);
     }

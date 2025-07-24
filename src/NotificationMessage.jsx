@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import styles from './NotificationMessage.module.css';
 
 function NotificationMessage({ message, type, onDismiss }) {

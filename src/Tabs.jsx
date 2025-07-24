@@ -13,16 +13,30 @@ function Tabs({
   wishlist,
   backlog,
   recentlyPicked,
-  filterCriterion,
-  setFilterCriterion,
-  sortCriterion,
-  setSortCriterion,
-  closeAllDetails,
-  setCloseAllDetails,
+  onMoveToBacklog,
+  onMoveToRecentlyPicked,
 }) {
   const [activeTab, setActiveTab] = useState('backlog');
   const [openGameCardIds, setOpenGameCardIds] = useState([]);
+  const [filterCriterion, setFilterCriterion] = useState('All');
+  const [sortCriterion, setSortCriterion] = useState('name-asc');
+  const [releaseYearFilter, setReleaseYearFilter] = useState('All');
+  const [platformFilter, setPlatformFilter] = useState('All');
+  const [playtimeFilter, setPlaytimeFilter] = useState('All');
+  const [closeAllDetails, setCloseAllDetails] = useState(false);
+  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setFilterCriterion('All');
+    setSortCriterion('name-asc');
+    setReleaseYearFilter('All');
+    setPlatformFilter('All');
+    setPlaytimeFilter('All');
+    setCloseAllDetails(true);
+    setOpenGameCardIds([]);
+  };
+  
   const handleGameCardToggle = (gameId, isOpen) => {
     setOpenGameCardIds(prev => {
       const newSet = new Set(prev);
@@ -40,9 +54,82 @@ function Tabs({
     setOpenGameCardIds([]);
   };
 
+  const getFilteredAndSortedGames = (games) => {
+    if (!games) return [];
+    let filteredGames = games;
+  
+    if (filterCriterion !== 'All') {
+      filteredGames = filteredGames.filter(game => {
+        const genres = game.genre.split(',').map(g => g.trim());
+        return genres.includes(filterCriterion);
+      });
+    }
+  
+    if (releaseYearFilter !== 'All') {
+      filteredGames = filteredGames.filter(game => {
+        const releaseYear = new Date(game.releaseDate).getFullYear();
+        return releaseYear.toString() === releaseYearFilter;
+      });
+    }
+  
+    if (platformFilter !== 'All') {
+      filteredGames = filteredGames.filter(game => {
+        const platforms = game.platform.split(',').map(p => p.trim());
+        return platforms.includes(platformFilter);
+      });
+    }
+  
+    if (playtimeFilter !== 'All') {
+      filteredGames = filteredGames.filter(game => {
+        const playtime = parseInt(game.estimatedPlaytime);
+        if (playtimeFilter === 'Short') {
+          return playtime < 10;
+        } else if (playtimeFilter === 'Medium') {
+          return playtime >= 10 && playtime <= 30;
+        } else if (playtimeFilter === 'Long') {
+          return playtime > 30;
+        }
+        return true;
+      });
+    }
+  
+    const sortedGames = [...filteredGames].sort((a, b) => {
+      if (sortCriterion === 'name-asc') {
+        return a.name.localeCompare(b.name);
+      } else if (sortCriterion === 'name-desc') {
+        return b.name.localeCompare(a.name);
+      } else if (sortCriterion === 'release-date-asc') {
+        return new Date(a.releaseDate) - new Date(b.releaseDate);
+      } else if (sortCriterion === 'release-date-desc') {
+        return new Date(b.releaseDate) - new Date(a.releaseDate);
+      }
+      return 0;
+    });
+    return sortedGames;
+  };
+
   const renderTabContent = () => {
     const currentGames = activeTab === 'backlog' ? backlog : wishlist;
-    const genres = Array.from(new Set([...wishlist, ...backlog].map(game => game.genre)));
+    const filteredAndSortedGames = getFilteredAndSortedGames(currentGames);
+
+    const allGenres = currentGames.flatMap(game => 
+      game.genre ? game.genre.split(/, |\/|,|\/| /).map(g => g.trim()).filter(g => g !== '') : []
+    );
+    const uniqueGenres = Array.from(new Set(allGenres));
+    const genresForFilter = ['All', ...uniqueGenres];
+
+    const allPlatforms = currentGames.flatMap(game =>
+      game.platform ? game.platform.split(',').map(p => p.trim()) : []
+    );
+    const uniquePlatforms = Array.from(new Set(allPlatforms));
+    const platformsForFilter = ['All', ...uniquePlatforms];
+
+    const allReleaseYears = currentGames.map(game => 
+        game.releaseDate ? new Date(game.releaseDate).getFullYear().toString() : null
+    ).filter(Boolean);
+    const uniqueReleaseYears = Array.from(new Set(allReleaseYears)).sort((a, b) => b - a);
+    const releaseYearsForFilter = ['All', ...uniqueReleaseYears];
+
 
     if (activeTab === 'recently-picked') {
       return (
@@ -79,13 +166,29 @@ function Tabs({
             <span className="icon-placeholder"></span> Add Manually
           </button>
         </div>
-        <FilterSortControls
-          filterCriterion={filterCriterion}
-          setFilterCriterion={setFilterCriterion}
-          sortCriterion={sortCriterion}
-          setSortCriterion={setSortCriterion}
-          genres={['All', ...genres]}
-        />
+        <button 
+          className="action-button" 
+          onClick={() => setIsFiltersVisible(!isFiltersVisible)}
+        >
+          {isFiltersVisible ? 'Hide Filters' : 'Show Filters'}
+        </button>
+        {isFiltersVisible && (
+          <FilterSortControls
+            filterCriterion={filterCriterion}
+            setFilterCriterion={setFilterCriterion}
+            sortCriterion={sortCriterion}
+            setSortCriterion={setSortCriterion}
+            genres={genresForFilter}
+            releaseYearFilter={releaseYearFilter}
+            setReleaseYearFilter={setReleaseYearFilter}
+            platformFilter={platformFilter}
+            setPlatformFilter={setPlatformFilter}
+            playtimeFilter={playtimeFilter}
+            setPlaytimeFilter={setPlaytimeFilter}
+            platforms={platformsForFilter}
+            releaseYears={releaseYearsForFilter}
+          />
+        )}
         {openGameCardIds.length > 0 && (
           <div className="close-all-details-container">
             <button className="tertiary-accent" onClick={handleCloseAllDetails}>
@@ -93,14 +196,15 @@ function Tabs({
             </button>
           </div>
         )}
-        {currentGames.length > 0 ? (
+        {filteredAndSortedGames.length > 0 ? (
           <div className="game-list">
-            {currentGames.map(game => (
+            {filteredAndSortedGames.map(game => (
               <GameCard
                 key={game.id}
                 game={game}
                 onEdit={onEditGame}
                 onRemove={(gameId) => onRemoveGame(gameId, activeTab)}
+                onMove={activeTab === 'backlog' ? onMoveToRecentlyPicked : onMoveToBacklog}
                 closeAllDetails={closeAllDetails}
                 setCloseAllDetails={setCloseAllDetails}
                 onGameCardToggle={handleGameCardToggle}
@@ -121,19 +225,19 @@ function Tabs({
       <div className="tabs">
         <button
           className={`tab-button ${activeTab === 'backlog' ? 'active' : ''}`}
-          onClick={() => setActiveTab('backlog')}
+          onClick={() => handleTabChange('backlog')}
         >
           {`Backlog (${backlog.length})`}
         </button>
         <button
           className={`tab-button ${activeTab === 'wishlist' ? 'active' : ''}`}
-          onClick={() => setActiveTab('wishlist')}
+          onClick={() => handleTabChange('wishlist')}
         >
           {`Wishlist (${wishlist.length})`}
         </button>
         <button
           className={`tab-button ${activeTab === 'recently-picked' ? 'active' : ''}`}
-          onClick={() => setActiveTab('recently-picked')}
+          onClick={() => handleTabChange('recently-picked')}
         >
           {`Recently Picked (${recentlyPicked.length})`}
         </button>

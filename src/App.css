@@ -265,8 +265,11 @@
   padding-top: 15px;
   border-top: 1px solid #507c65ff;
   display: flex;
-  gap: 20px;
-  justify-content: flex-end;
+  justify-content: space-between;
+  div {
+    display: flex;
+    gap: 10px;
+  }
 }
 
 .edit-game-button {
@@ -294,7 +297,8 @@
 .filter-sort-controls {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
+  margin-top: 15px;
 }
 
 .control-group {
@@ -307,11 +311,14 @@
   font-weight: bold;
   font-size: 1rem;
   color: #fdfdffff;
+  margin-bottom: 15px;
 }
 
 .button-group {
   display: flex;
   gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 15px; /* Add some padding for the scrollbar */
 }
 
 .control-button {
@@ -323,6 +330,7 @@
   cursor: pointer;
   font-size: 0.9rem;
   transition: background-color 0.3s, color 0.3s;
+  flex-shrink: 0; /* Prevent buttons from shrinking */
 }
 
 .control-button.active {
@@ -390,7 +398,7 @@
   }
 
   .button-group {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
   .game-card-header {

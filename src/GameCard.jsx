@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-function GameCard({ game, onEdit, onRemove, closeAllDetails, setCloseAllDetails, onGameCardToggle }) {
+function GameCard({ game, onEdit, onRemove, onMove, closeAllDetails, setCloseAllDetails, onGameCardToggle }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleToggle = () => {
@@ -23,6 +23,8 @@ function GameCard({ game, onEdit, onRemove, closeAllDetails, setCloseAllDetails,
       setCloseAllDetails(false);
     }
   }, [closeAllDetails, setCloseAllDetails, isOpen, onGameCardToggle, game.id]);
+
+  const moveButtonText = game.list === 'backlog' ? 'Move to Recently Picked' : 'Move to Backlog';
 
   return (
     <div className={`game-card ${isOpen ? 'open' : ''}`}>
@@ -67,12 +69,19 @@ function GameCard({ game, onEdit, onRemove, closeAllDetails, setCloseAllDetails,
             </div>
           )}
           <div className="game-card-footer">
+            {onMove && (
+              <button className="move-game-button" onClick={() => onMove(game.id)}>
+                {moveButtonText}
+              </button>
+            )}
+            <div>
             <button className="edit-game-button" onClick={() => onEdit(game)}>
-              Edit Game Details
+              Edit
             </button>
             <button className="remove-game-button" onClick={() => onRemove(game.id)}>
-              Remove Game
+              Remove
             </button>
+            </div>
           </div>
         </div>
       )}

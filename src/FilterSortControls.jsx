@@ -6,8 +6,23 @@ function FilterSortControls({
   setFilterCriterion, 
   sortCriterion,
   setSortCriterion,
-  genres
+  genres,
+  releaseYearFilter,
+  setReleaseYearFilter,
+  platformFilter,
+  setPlatformFilter,
+  playtimeFilter,
+  setPlaytimeFilter,
+  platforms,
+  releaseYears,
 }) {
+  const playtimeOptions = [
+    { value: 'All', label: 'All' },
+    { value: 'Short', label: 'Short (<10 hours)' },
+    { value: 'Medium', label: 'Medium (10-30 hours)' },
+    { value: 'Long', label: 'Long (>30 hours)' },
+  ];
+
   return (
     <div className="filter-sort-controls">
       <div className="control-group">
@@ -25,6 +40,49 @@ function FilterSortControls({
           ))}
         </div>
       </div>
+      <div className="control-group">
+        <span className="control-label">Filter by Release Year:</span>
+        <div className="button-group">
+          {releaseYears.map(year => (
+            <button
+              key={year}
+              className={`control-button ${releaseYearFilter === year ? 'active' : ''}`}
+              onClick={() => setReleaseYearFilter(year)}
+            >
+              {year}
+            </button>
+          ))}
+        </div>
+        </div>
+        <div className="control-group">
+        <span className="control-label">Filter by Platform:</span>
+        <div className="button-group">
+          {platforms.map(platform => (
+            <button
+              key={platform}
+              className={`control-button ${platformFilter === platform ? 'active' : ''}`}
+              onClick={() => setPlatformFilter(platform)}
+            >
+              {platform}
+            </button>
+          ))}
+        </div>
+        </div>
+        <div className="control-group">
+        <span className="control-label">Filter by Playtime:</span>
+        <div className="button-group">
+          {playtimeOptions.map(option => (
+            <button
+              key={option.value}
+              className={`control-button ${playtimeFilter === option.value ? 'active' : ''}`}
+              onClick={() => setPlaytimeFilter(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        </div>
+
 
       <div className="control-group">
         <span className="control-label">Sort by:</span>
