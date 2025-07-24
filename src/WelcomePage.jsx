@@ -14,9 +14,6 @@ function WelcomePage({ onSignInClick }) {
       <button className={styles.signInButton} onClick={onSignInClick}>
         Sign In / Sign Up
       </button>
-      <div className={styles.imagePlaceholder}>
-        {/* Placeholder for a relevant image */}
-      </div>
     </div>
   );
 }

@@ -1,28 +1,37 @@
 import React from 'react';
+import { FaSteam } from 'react-icons/fa';
 import './App.css';
 
-function Header({ onRecommendClick, onUserAvatarClick, currentUser, onSignOut, onLinkSteamClick }) {
+function Header({ onRecommendClick, onSignInClick, currentUser, onSignOut, onLinkSteamClick }) {
   return (
     <header className="header">
       <div className="logo-container">
         <div className="flame-icon"></div>
-        <h1>Backlog Odyssey</h1>
+        <h1>Backlog Odissey</h1>
       </div>
       <div className="actions-container">
+        <button className="primary-accent" onClick={onRecommendClick}>
+          Recommend a Game
+        </button>
         {currentUser && !currentUser.hasSteamLinked && (
-          <button className="tertiary-accent" onClick={onLinkSteamClick}>
-            Link Steam Account
+          <button className="secondary-accent" onClick={onLinkSteamClick}>
+            <FaSteam /> Link Steam
           </button>
         )}
-        <button className="primary-accent" onClick={onRecommendClick}>Recommend me a game</button>
-        {currentUser ? (
-          <div className="user-info">
-            <span className="user-name">Welcome, {currentUser.name}!</span>
-            <button className="secondary-accent" onClick={onSignOut}>Sign Out</button>
-          </div>
-        ) : (
-          <button className="secondary-accent" onClick={onUserAvatarClick}>Sign In</button>
-        )}
+        <div className="user-info"> 
+          {currentUser ? (
+            <>
+              <span className="user-name">Welcome! {currentUser.name}</span>
+              <button className="tertiary-accent" onClick={onSignOut}>
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <button className="tertiary-accent" onClick={onSignInClick}>
+              Sign In
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );

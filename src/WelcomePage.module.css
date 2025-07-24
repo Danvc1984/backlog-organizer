@@ -44,17 +44,4 @@
   background-color: #7b1a0fff;
 }
 
-.imagePlaceholder {
-  width: 100%;
-  max-width: 900px;
-  height: 300px; /* Adjust as needed */
-  background-color: #1b1b37ff; /* Dark background */
-  margin-top: 40px;
-  border-radius: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #a0a0b0;
-  font-size: 1.5rem;
-  /* Add a subtle gradient or pattern later if desired */
-}
+

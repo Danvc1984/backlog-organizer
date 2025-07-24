@@ -1,18 +1,18 @@
 import React from 'react';
-import styles from './RecommendationModal.module.css';
+import styles from './RecommendationCard.module.css';
 
-function RecommendationCard({ game }) {
+function RecommendationCard({ game, onSelect }) {
+  const isWishlist = game.source === 'wishlist';
+
   return (
-    <div className={styles.recommendationCard}>
-      <div className={styles.recommendationCardImage}>
-        <img src={game.imageUrl} alt={game.name} />
-      </div>
-      <div className={styles.recommendationCardDetails}>
-        <h3>{game.name}</h3>
-        <p>Platform: {game.platform}</p>
-        <p>Genre: {game.genre}</p>
-        <p>Est. Duration: {game.estimatedPlaytime}</p>
-        <button className={styles.selectGameButton}>Select Game</button>
+    <div className={`${styles.card} ${isWishlist ? styles.wishlistGlow : ''}`} onClick={() => onSelect(game)}>
+      {isWishlist && <div className={styles.wishlistBadge}>Wishlist Pick</div>}
+      <div className={styles.cardImage} style={{ backgroundImage: `url(${game.imageUrl})` }}></div>
+      <div className={styles.cardBody}>
+        <h3 className={styles.cardTitle}>{game.name}</h3>
+        <p className={styles.cardText}>Platform: {game.platform}</p>
+        <p className={styles.cardText}>Genre: {game.genre}</p>
+        <p className={styles.cardText}>Duration: {game.estimatedPlaytime}</p>
       </div>
     </div>
   );

@@ -299,7 +299,9 @@ function App() {
     setIsAuthModalOpen(true);
   };
 
-  const handleSignIn = () => {};
+  const handleSignIn = () => {
+    setIsAuthModalOpen(false);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -332,6 +334,14 @@ function App() {
     }
   };
 
+  const handleSelectGame = (game) => {
+    if (game.list === 'backlog') {
+      handleMoveToRecentlyPicked(game.id);
+    } else {
+      handleMoveToBacklog(game.id);
+    }
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -340,7 +350,7 @@ function App() {
     <div className="background-dark">
       <Header
         onRecommendClick={handleRecommendClick}
-        onUserAvatarClick={openAuthModal}
+        onSignInClick={openAuthModal}
         currentUser={currentUser}
         onSignOut={handleSignOut}
         onLinkSteamClick={openLinkSteamModal}
@@ -362,7 +372,12 @@ function App() {
         <WelcomePage onSignInClick={openAuthModal} />
       )}
 
-      {isRecommendationModalOpen && <RecommendationModal onClose={() => setIsRecommendationModalOpen(false)} backlog={backlog} />}
+      {isRecommendationModalOpen && (
+        <RecommendationModal
+          onClose={() => setIsRecommendationModalOpen(false)}
+          onSelectGame={handleSelectGame}
+        />
+      )}
       {isAddEditGameModalOpen && (
         <AddEditGameModal
           gameToEdit={gameToEdit}
@@ -377,8 +392,8 @@ function App() {
           onCancel={() => setIsSteamImportConfirmationModalOpen(false)}
         />
       )}
-      {isSteamImportModalOpen && <SteamImportLoadingModal onClose={() => setIsSteamImportModalOpen(false)} />}
-      {isCSVUploadLoadingModalOpen && <CSVUploadLoadingModal onClose={() => setIsCSVUploadLoadingModalOpen(false)} />}
+      {isSteamImportModalOpen && <SteamImportLoadingModal />}
+      {isCSVUploadLoadingModalOpen && <CSVUploadLoadingModal />}
       {isCSVUploadFormModalOpen && <CSVUploadModal onClose={() => setIsCSVUploadFormModalOpen(false)} onUpload={handleCSVFileUpload} listType={listTypeForNewGame} />}
       {isAuthModalOpen && <AuthModal onClose={() => setIsAuthModalOpen(false)} onSignIn={handleSignIn} showNotification={showNotification} />}
       {isLinkSteamModalOpen && <LinkSteamModal onClose={() => setIsLinkSteamModalOpen(false)} onLinkSteam={handleLinkSteam} currentUser={currentUser} showNotification={showNotification} />}

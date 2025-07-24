@@ -12,11 +12,11 @@
 }
 
 .modalContent {
-  background-color: #1b1b37ff;
+  background-color: #0D1B2A;
   padding: 40px;
   border-radius: 12px;
   width: 90%;
-  max-width: 1000px;
+  max-width: 1000px; /* Increased width for larger screens */
   position: relative;
   text-align: center;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
@@ -43,52 +43,12 @@
   margin-bottom: 30px;
 }
 
-.recommendationsContainer {
+.recommendations {
   display: flex;
   justify-content: space-around;
   gap: 30px;
   margin-bottom: 30px;
-}
-
-.recommendationCard {
-  background-color: #2a2a4a;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  width: 30%;
-  text-align: left;
-}
-
-.recommendationCardImage img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.recommendationCardDetails {
-  padding: 20px;
-}
-
-.recommendationCardDetails h3 {
-  font-size: 1.5rem;
-  margin-bottom: 15px;
-}
-
-.recommendationCardDetails p {
-  margin-bottom: 10px;
-  color: #a0a0b0;
-}
-
-.selectGameButton {
-  background-color: #f58f00ff;
-  color: #1b1b37ff;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  width: 100%;
-  margin-top: 10px;
+  flex-wrap: wrap; /* Allow cards to wrap on smaller screens */
 }
 
 .modalActions {
@@ -98,10 +58,23 @@
   gap: 20px;
 }
 
-.refreshButton,
+.refreshButton {
+  background-color: #f58f00ff; /* Orange for primary action */
+  color: #0D1B2A;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .cancelButton {
   background: none;
-  border: 1px solid #507c65ff;
+  border: none;
   color: #fdfdffff;
   padding: 10px 20px;
   border-radius: 5px;
@@ -109,6 +82,29 @@
   font-size: 1rem;
 }
 
-.cancelButton {
-  border: none;
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s ease-in-out infinite;
+  margin: 20px auto;
+}
+
+.spinningIcon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .recommendations {
+    flex-direction: column;
+    align-items: center;
+  }
 }

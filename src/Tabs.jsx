@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import GameCard from './GameCard';
 import RecentlyPickedGameCard from './RecentlyPickedGameCard';
 import FilterSortControls from './FilterSortControls';
+import { FaSteam, FaUpload, FaPlus } from 'react-icons/fa';
 import './App.css';
 
 function Tabs({
@@ -25,6 +26,7 @@ function Tabs({
   const [playtimeFilter, setPlaytimeFilter] = useState('All');
   const [closeAllDetails, setCloseAllDetails] = useState(false);
   const [isFiltersVisible, setIsFiltersVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -35,6 +37,7 @@ function Tabs({
     setPlaytimeFilter('All');
     setCloseAllDetails(true);
     setOpenGameCardIds([]);
+    setSearchQuery('');
   };
   
   const handleGameCardToggle = (gameId, isOpen) => {
@@ -57,6 +60,12 @@ function Tabs({
   const getFilteredAndSortedGames = (games) => {
     if (!games) return [];
     let filteredGames = games;
+
+    if (searchQuery.length >= 3) {
+      filteredGames = filteredGames.filter(game =>
+        game.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
   
     if (filterCriterion !== 'All') {
       filteredGames = filteredGames.filter(game => {
@@ -132,12 +141,18 @@ function Tabs({
 
 
     if (activeTab === 'recently-picked') {
+      const sortedRecentlyPicked = [...recentlyPicked].sort((a, b) => {
+        const dateA = a.playedAt?.toDate ? a.playedAt.toDate() : new Date(a.playedAt);
+        const dateB = b.playedAt?.toDate ? b.playedAt.toDate() : new Date(b.playedAt);
+        return dateB - dateA;
+      });
+
       return (
         <div>
           <h2>Recently Picked</h2>
-          {recentlyPicked.length > 0 ? (
+          {sortedRecentlyPicked.length > 0 ? (
             <div className="recently-picked-game-list">
-              {recentlyPicked.map(game => (
+              {sortedRecentlyPicked.map(game => (
                 <RecentlyPickedGameCard key={game.id} game={game} />
               ))}
             </div>
@@ -156,21 +171,21 @@ function Tabs({
         <div className="add-game-options">
           {activeTab === 'backlog' && (
             <button className="action-button" onClick={onImportSteam}>
-              <span className="icon-placeholder"></span> Import from Steam
+              <FaSteam /> Import from Steam
             </button>
           )}
           <button className="action-button" onClick={() => onUploadCSV(activeTab)}>
-            <span className="icon-placeholder"></span> Upload CSV
+            <FaUpload /> Upload CSV
           </button>
           <button className="action-button" onClick={() => onAddGame(activeTab)}>
-            <span className="icon-placeholder"></span> Add Manually
+            <FaPlus /> Add Manually
           </button>
         </div>
         <button 
           className="action-button" 
           onClick={() => setIsFiltersVisible(!isFiltersVisible)}
         >
-          {isFiltersVisible ? 'Hide Filters' : 'Show Filters'}
+          {isFiltersVisible ? 'Hide Search & Filters' : 'Show Search & Filters'}
         </button>
         {isFiltersVisible && (
           <FilterSortControls
@@ -187,6 +202,8 @@ function Tabs({
             setPlaytimeFilter={setPlaytimeFilter}
             platforms={platformsForFilter}
             releaseYears={releaseYearsForFilter}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
           />
         )}
         {openGameCardIds.length > 0 && (

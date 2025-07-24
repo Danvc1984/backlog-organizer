@@ -1,16 +1,46 @@
-import React from 'react';
-import RecommendationCard from './RecommendationCard';
+import React, { useState, useEffect } from 'react';
 import styles from './RecommendationModal.module.css';
+import RecommendationCard from './RecommendationCard';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { app } from './firebase';
+import { FaSync } from 'react-icons/fa';
 
-const mockRecommendations = [
-  { id: 1, name: 'The Witcher 3: Wild Hunt', imageUrl: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Witcher_3_cover_art.jpg', platform: 'PC', estimatedPlaytime: '100+ hours', genre: 'RPG' },
-  { id: 2, name: 'Cyberpunk 2077', imageUrl: 'https://via.placeholder.com/300x400', platform: 'PS5', estimatedPlaytime: '60 hours', genre: 'RPG' },
-  { id: 3, name: 'Elden Ring', imageUrl: 'https://via.placeholder.com/300x400', platform: 'PS5', estimatedPlaytime: '120+ hours', genre: 'Action RPG' },
-];
+const functions = getFunctions(app);
+const getRecommendationsCallable = httpsCallable(functions, 'getRecommendations');
 
-function RecommendationModal({ onClose }) {
-  const handleOverlayClick = (event) => {
-    if (event.target === event.currentTarget) {
+function RecommendationModal({ onClose, onSelectGame }) {
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchRecommendations = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await getRecommendationsCallable();
+      setRecommendations(result.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, []);
+
+  const handleRegenerate = () => {
+    fetchRecommendations();
+  };
+
+  const handleSelect = (game) => {
+    onSelectGame(game);
+    onClose();
+  };
+
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
       onClose();
     }
   };
@@ -19,17 +49,27 @@ function RecommendationModal({ onClose }) {
     <div className={styles.modalOverlay} onClick={handleOverlayClick}>
       <div className={styles.modalContent}>
         <button className={styles.closeButton} onClick={onClose}>×</button>
-        <div className={styles.modalHeader}>
-          <h2>Here are your recommendations!</h2>
-          <p>Our AI has picked these games for you. Choose one to start your next adventure.</p>
-        </div>
-        <div className={styles.recommendationsContainer}>
-          {mockRecommendations.map(game => (
-            <RecommendationCard key={game.id} game={game} />
-          ))}
-        </div>
+        <h2>Here are your recommendations!</h2>
+        <h3>Click to select a title</h3>
+        {loading && <div className={styles.spinner}></div>}
+        {error && <p>Error: {error}</p>}
+        {!loading && !error && (
+            <div className={styles.recommendations}>
+            {recommendations.map((game) => (
+              <RecommendationCard key={game.id} game={game} onSelect={handleSelect} />
+            ))}
+          </div>
+        )}
         <div className={styles.modalActions}>
-          <button className={styles.refreshButton}>Refresh Recommendations</button>
+          <button className={styles.refreshButton} onClick={handleRegenerate} disabled={loading}>
+            {loading ? (
+              <>
+                <FaSync className={styles.spinningIcon} /> Regenerating...
+              </>
+            ) : (
+              'Regenerate'
+            )}
+          </button>
           <button className={styles.cancelButton} onClick={onClose}>Cancel</button>
         </div>
       </div>

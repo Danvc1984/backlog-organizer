@@ -12,7 +12,7 @@
 }
 
 .modalContent {
-  background-color: #2a2a4a; /* Matches game card background */
+  background-color: #1B263B; /* Matches game card background */
   padding: 30px;
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
@@ -56,7 +56,7 @@
   padding: 10px;
   border-radius: 5px;
   border: 1px solid #507c65ff;
-  background-color: #1b1b37ff; /* Darker input background */
+  background-color: #0D1B2A; /* Darker input background */
   color: #fdfdffff;
   font-size: 1rem;
 }
@@ -104,7 +104,7 @@
 
 .modalActions .primary-accent {
   background-color: #f58f00ff; /* Orange for Save */
-  color: #1b1b37ff;
+  color: #0D1B2A;
 }
 
 .modalActions .secondary-accent {

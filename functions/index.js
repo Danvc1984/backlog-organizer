@@ -8,6 +8,83 @@ const db = admin.firestore();
 const RAWG_API_KEY = functions.config().rawg.key;
 const STEAM_API_KEY = functions.config().steam.key;
 
+// Helper function for weighted random selection
+const getWeightedRandom = (items, weights) => {
+  const totalWeight = weights.reduce((acc, weight) => acc + weight, 0);
+  let random = Math.random() * totalWeight;
+  for (let i = 0; i < items.length; i++) {
+    if (random < weights[i]) {
+      return items[i];
+    }
+    random -= weights[i];
+  }
+  return items[items.length - 1];
+};
+
+exports.getRecommendations = functions.runWith({ enforceAppCheck: false }).https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "User must be authenticated.");
+  }
+
+  const userId = context.auth.uid;
+  const userRef = db.collection("users").doc(userId);
+  const userDoc = await userRef.get();
+  const userData = userDoc.data();
+  const wishlistSprinkleCounter = userData.wishlistSprinkleCounter || 0;
+
+  const backlogRef = db.collection("backlog").where("userId", "==", userId);
+  const wishlistRef = db.collection("wishlist").where("userId", "==", userId);
+  const recentlyPickedRef = db.collection("recentlyPicked").where("userId", "==", userId);
+
+  const [backlogSnapshot, wishlistSnapshot, recentlyPickedSnapshot] = await Promise.all([
+    backlogRef.get(),
+    wishlistRef.get(),
+    recentlyPickedRef.get(),
+  ]);
+
+  const backlog = backlogSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const wishlist = wishlistSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const recentlyPicked = recentlyPickedSnapshot.docs.map((doc) => doc.data().name);
+
+  const recommendations = [];
+  let useWishlist = wishlist.length > 0 && wishlistSprinkleCounter >= 5;
+
+  if (useWishlist) {
+    const wishlistWeights = wishlist.map((game) => {
+        let weight = 1;
+        // Apply weighting logic here based on your criteria
+        return weight;
+    });
+    const recommendedWishlistGame = getWeightedRandom(wishlist, wishlistWeights);
+    recommendations.push({ ...recommendedWishlistGame, source: 'wishlist' });
+    await userRef.update({ wishlistSprinkleCounter: 0 });
+  } else {
+    await userRef.update({ wishlistSprinkleCounter: admin.firestore.FieldValue.increment(1) });
+  }
+
+  const backlogToRecommendFrom = backlog.filter(
+    (game) => !recentlyPicked.includes(game.name) && !recommendations.some((rec) => rec.name === game.name)
+  );
+
+  const numBacklogRecommendations = 3 - recommendations.length;
+
+  for (let i = 0; i < numBacklogRecommendations; i++) {
+    if (backlogToRecommendFrom.length === 0) break;
+    const backlogWeights = backlogToRecommendFrom.map((game) => {
+        let weight = 1;
+        // Apply weighting logic here based on your criteria
+        return weight;
+    });
+    const recommendedBacklogGame = getWeightedRandom(backlogToRecommendFrom, backlogWeights);
+    recommendations.push({ ...recommendedBacklogGame, source: 'backlog' });
+    // Remove the selected game to avoid duplicates
+    const index = backlogToRecommendFrom.findIndex((game) => game.name === recommendedBacklogGame.name);
+    backlogToRecommendFrom.splice(index, 1);
+  }
+
+  return recommendations;
+});
+
 exports.importSteamGames = functions.runWith({ enforceAppCheck: false, timeoutSeconds: 540 }).https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "User must be authenticated.");

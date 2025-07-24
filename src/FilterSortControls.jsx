@@ -15,6 +15,8 @@ function FilterSortControls({
   setPlaytimeFilter,
   platforms,
   releaseYears,
+  searchQuery,
+  setSearchQuery,
 }) {
   const playtimeOptions = [
     { value: 'All', label: 'All' },
@@ -112,6 +114,17 @@ function FilterSortControls({
             Release Date (Newest)
           </button>
         </div>
+      </div>
+      <div className="search-container">
+        <label htmlFor="search-input" className="control-label">Search by Title:</label>
+        <input
+          id="search-input"
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Enter at least 3 characters..."
+          className="search-input"
+        />
       </div>
     </div>
   );

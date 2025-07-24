@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FaDesktop, FaTags, FaClock, FaCalendarAlt } from 'react-icons/fa';
 import './App.css';
 
 function GameCard({ game, onEdit, onRemove, onMove, closeAllDetails, setCloseAllDetails, onGameCardToggle }) {
@@ -28,6 +29,7 @@ function GameCard({ game, onEdit, onRemove, onMove, closeAllDetails, setCloseAll
 
   return (
     <div className={`game-card ${isOpen ? 'open' : ''}`}>
+      {isOpen && <div className="backdrop" style={{ backgroundImage: `url(${game.imageUrl})` }}></div>}
       <div className="game-card-header" onClick={handleToggle}>
         <div className="game-card-image">
           <img src={game.imageUrl} alt={game.name} />
@@ -47,19 +49,19 @@ function GameCard({ game, onEdit, onRemove, onMove, closeAllDetails, setCloseAll
       {isOpen && (
         <div className="game-card-details">
           <div className="detail-item">
-            <span className="icon-placeholder"></span>
+            <FaDesktop />
             <p>Platform: {game.platform}</p>
           </div>
           <div className="detail-item">
-            <span className="icon-placeholder"></span>
+            <FaTags />
             <p>Genre: {game.genre}</p>
           </div>
           <div className="detail-item">
-            <span className="icon-placeholder"></span>
+            <FaClock />
             <p>Estimated Playtime: {game.estimatedPlaytime}</p>
           </div>
           <div className="detail-item">
-            <span className="icon-placeholder"></span>
+            <FaCalendarAlt />
             <p>Release Date: {game.releaseDate}</p>
           </div>
           {game.pickedTimestamp && (
