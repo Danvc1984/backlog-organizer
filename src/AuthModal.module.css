@@ -21,6 +21,8 @@
   position: relative;
   color: #fdfdffff; /* Light text color */
   text-align: center;
+  max-height: 80vh; /* Set maximum height to 80% of viewport height */
+  overflow-y: auto; /* Enable vertical scrolling */
 }
 
 .closeButton {

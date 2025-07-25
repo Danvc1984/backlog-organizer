@@ -20,6 +20,8 @@
   position: relative;
   text-align: center;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  max-height: 80vh; /* Set maximum height to 80% of viewport height */
+  overflow-y: auto; /* Enable vertical scrolling */
 }
 
 .closeButton {

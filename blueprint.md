@@ -21,11 +21,3 @@ This project is a backlog and wishlist organizer for video games. It allows user
 ### Game Discovery
 - **Game recommendations:** Users can get a random game recommendation from their backlog.
 - **Filtering and sorting:** Users can filter their lists by genre, release year, platform, and estimated playtime. They can also sort their lists by name and release date.
-
-## Code Cleanup Plan
-
-The following changes will be made to improve the quality and maintainability of the codebase:
-
-- **Remove unused variables and imports:** I will identify and remove any declared variables and imported modules that are not being used in the code.
-- **Fix linter errors:** I will run the linter and fix any reported errors to ensure the code adheres to the project's coding standards.
-- **Improve code readability:** I will review the code and make changes to improve its readability and maintainability. This may include refactoring complex functions, adding comments, and improving variable names.
